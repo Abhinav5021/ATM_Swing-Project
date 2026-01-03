@@ -46,17 +46,17 @@ public class ATMMainMenu extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == withdrawBtn) {
-            JOptionPane.showMessageDialog(this, "Withdraw Module will open here.");
-            // new WithdrawModule();
+            // JOptionPane.showMessageDialog(this, "Withdraw Module will open here.");
+            new WithdrawModule();
         } else if(e.getSource() == depositBtn) {
-            JOptionPane.showMessageDialog(this, "Deposit Module will open here.");
-            // new DepositModule();
+            // JOptionPane.showMessageDialog(this, "Deposit Module will open here.");
+            new DepositModule();
         } else if(e.getSource() == balanceBtn) {
-            JOptionPane.showMessageDialog(this, "Balance Inquiry Module will open here.");
-            // new BalanceModule();
+            // JOptionPane.showMessageDialog(this, "Balance Inquiry Module will open here.");
+            new BalanceModule();
         } else if(e.getSource() == pinChangeBtn) {
-            JOptionPane.showMessageDialog(this, "PIN Change Module will open here.");
-            // new PinChangeModule();
+            // JOptionPane.showMessageDialog(this, "PIN Change Module will open here.");
+            new PinChangeModule();
         } else if(e.getSource() == exitBtn) {
             JOptionPane.showMessageDialog(this, "Thank you for using ATM!");
             System.exit(0);

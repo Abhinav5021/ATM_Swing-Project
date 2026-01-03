@@ -1,21 +1,22 @@
 import javax.swing.*;
 import java.awt.event.*;
+import java.sql.*;
 
 public class BalanceModule extends JFrame implements ActionListener {
+
     private JLabel balanceLabel;
     private JButton backBtn;
+    private int id;
 
-    // For demo, we’ll use a hardcoded balance.
-    // Later, you can pass this from your BankAccount object or database.
-    private double balance = 1500.00;
+    public BalanceModule(int id) {
+        this.id = id;
 
-    public BalanceModule() {
         setTitle("Balance Inquiry");
         setSize(400, 200);
         setLayout(null);
 
-        balanceLabel = new JLabel("Your Current Balance: ₹" + balance);
-        balanceLabel.setBounds(50, 50, 300, 30);
+        balanceLabel = new JLabel();
+        balanceLabel.setBounds(60, 50, 300, 30);
         add(balanceLabel);
 
         backBtn = new JButton("Back to Menu");
@@ -23,20 +24,38 @@ public class BalanceModule extends JFrame implements ActionListener {
         backBtn.addActionListener(this);
         add(backBtn);
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        fetchBalance();
+
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
         setVisible(true);
+    }
+
+    private void fetchBalance() {
+        try {
+            Connection con = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/atm","root","9309");
+
+            String sql = "SELECT balance FROM users WHERE id=?";
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setInt(1, id);
+
+            ResultSet rs = pst.executeQuery();
+            if(rs.next()){
+                balanceLabel.setText("Your Current Balance: ₹ " + rs.getInt("balance"));
+            }
+
+            con.close();
+
+        } catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if(e.getSource() == backBtn) {
-            // Close this window and go back to Main Menu
-            new ATMMainMenu();
+        if(e.getSource() == backBtn){
             dispose();
         }
-    }
-
-    public static void main(String[] args) {
-        new BalanceModule();
     }
 }

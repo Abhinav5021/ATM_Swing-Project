@@ -1,58 +1,92 @@
 import javax.swing.*;
 import java.awt.event.*;
+import java.sql.*;
 
 public class ATMLogin extends JFrame implements ActionListener {
+
     private JTextField cardField;
     private JPasswordField pinField;
     private JButton loginBtn;
 
     public ATMLogin() {
+
         setTitle("ATM Login");
         setSize(400, 250);
         setLayout(null);
 
         JLabel cardLabel = new JLabel("Card Number:");
-        cardLabel.setBounds(50, 50, 100, 30);
+        cardLabel.setBounds(50, 50, 120, 30);
         add(cardLabel);
 
         cardField = new JTextField();
-        cardField.setBounds(160, 50, 150, 30);
+        cardField.setBounds(180, 50, 150, 30);
         add(cardField);
 
         JLabel pinLabel = new JLabel("PIN:");
-        pinLabel.setBounds(50, 100, 100, 30);
+        pinLabel.setBounds(50, 100, 120, 30);
         add(pinLabel);
 
         pinField = new JPasswordField();
-        pinField.setBounds(160, 100, 150, 30);
+        pinField.setBounds(180, 100, 150, 30);
         add(pinField);
 
         loginBtn = new JButton("Login");
-        loginBtn.setBounds(130, 150, 100, 30);
+        loginBtn.setBounds(140, 150, 100, 30);
         loginBtn.addActionListener(this);
         add(loginBtn);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        String cardNumber = cardField.getText();
-        String pin = new String(pinField.getPassword());
 
-        // Hardcoded validation for demo
-        if (cardNumber.equals("123456") && pin.equals("1234")) {
+        String card = cardField.getText();
+        String pin  = new String(pinField.getPassword());
+
+        if(card.isEmpty() || pin.isEmpty()){
+            JOptionPane.showMessageDialog(this, "Please enter Card Number and PIN");
+            return;
+        }
+
+        try {
+            Connection con = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/atm",
+                    "root",
+                    "9309");
+
+         //   String query = "SELECT name, balance FROM users WHERE card_number=? AND pin=?";
+            String query = "SELECT id, name, balance FROM users WHERE card_number=? AND pin=?";
+
+            PreparedStatement pst = con.prepareStatement(query);
+            pst.setString(1, card);
+            pst.setString(2, pin);
+
+            ResultSet rs = pst.executeQuery();
+
+           if (rs.next()) {
+            int id = rs.getInt("id");
+            String name = rs.getString("name");
+            int balance = rs.getInt("balance");
+
             JOptionPane.showMessageDialog(this, "Login Successful!");
-            // Here you can open the ATM Menu window
-            new ATMMainMenu(); // Example: call your main menu class
-            dispose(); // close login window
-        } else {
-            JOptionPane.showMessageDialog(this, "Invalid Card Number or PIN");
+            new ATMMainMenu(id, name, balance);
+            dispose();
+            }
+
+            else {
+                JOptionPane.showMessageDialog(this, "Invalid Card Number or PIN");
+            }
+
+            con.close();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
-    
     public static void main(String[] args) {
         new ATMLogin();
     }

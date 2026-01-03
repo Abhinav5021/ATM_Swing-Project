@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 
@@ -11,32 +12,61 @@ public class ATMLogin extends JFrame implements ActionListener {
     public ATMLogin() {
 
         setTitle("ATM Login");
-        setSize(400, 250);
-        setLayout(null);
+        setSize(420, 300);
+        setLayout(new BorderLayout());
 
-        JLabel cardLabel = new JLabel("Card Number:");
-        cardLabel.setBounds(50, 50, 120, 30);
-        add(cardLabel);
+        // ===== Header =====
+        JPanel header = new JPanel();
+        header.setBackground(new Color(0, 102, 204));
+        JLabel title = new JLabel("ATM LOGIN");
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Arial", Font.BOLD, 20));
+        header.add(title);
+
+        // ===== Center Panel =====
+        JPanel center = new JPanel(new GridBagLayout());
+        center.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel cardLabel = new JLabel("Card Number");
+        cardLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridx = 0; gbc.gridy = 0;
+        center.add(cardLabel, gbc);
 
         cardField = new JTextField();
-        cardField.setBounds(180, 50, 150, 30);
-        add(cardField);
+        cardField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.ipadx = 120;
+        center.add(cardField, gbc);
 
-        JLabel pinLabel = new JLabel("PIN:");
-        pinLabel.setBounds(50, 100, 120, 30);
-        add(pinLabel);
+        JLabel pinLabel = new JLabel("PIN");
+        pinLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridx = 0; gbc.gridy = 1;
+        center.add(pinLabel, gbc);
 
         pinField = new JPasswordField();
-        pinField.setBounds(180, 100, 150, 30);
-        add(pinField);
+        pinField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridx = 1; gbc.gridy = 1;
+        center.add(pinField, gbc);
 
-        loginBtn = new JButton("Login");
-        loginBtn.setBounds(140, 150, 100, 30);
+        loginBtn = new JButton("LOGIN");
+        loginBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        loginBtn.setBackground(new Color(0, 102, 204));
+        loginBtn.setForeground(Color.WHITE);
+        loginBtn.setFocusPainted(false);
         loginBtn.addActionListener(this);
-        add(loginBtn);
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.ipady = 8;
+        center.add(loginBtn, gbc);
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        add(header, BorderLayout.NORTH);
+        add(center, BorderLayout.CENTER);
+
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
     }
 
@@ -48,44 +78,41 @@ public class ATMLogin extends JFrame implements ActionListener {
 
         try {
             if(card.isEmpty() || pin.isEmpty())
-                throw new Exception("Please enter Card Number and PIN!");
+                throw new Exception("Please enter Card Number and PIN");
 
             if(!card.matches("\\d{10}"))
-                throw new Exception("Card Number must be exactly 10 digits!");
+                throw new Exception("Card Number must be 10 digits");
 
             if(!pin.matches("\\d{4}"))
-                throw new Exception("PIN must be exactly 4 digits!");
+                throw new Exception("PIN must be 4 digits");
 
             Connection con = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/atm","root","9309");
 
-            String query = "SELECT id, name, balance FROM users WHERE card_number=? AND pin=?";
-            PreparedStatement pst = con.prepareStatement(query);
+            String sql = "SELECT id, name, balance FROM users WHERE card_number=? AND pin=?";
+            PreparedStatement pst = con.prepareStatement(sql);
             pst.setString(1, card);
             pst.setString(2, pin);
 
             ResultSet rs = pst.executeQuery();
 
             if(rs.next()){
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                int balance = rs.getInt("balance");
-
-                JOptionPane.showMessageDialog(this,"Login Successful!");
-                new ATMMainMenu(id, name, balance);
+                JOptionPane.showMessageDialog(this, "Login Successful!");
+                new ATMMainMenu(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("balance")
+                );
                 dispose();
-            }
-            else{
-                throw new Exception("Invalid Card Number or PIN!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Invalid Card Number or PIN");
             }
 
             con.close();
 
-        } 
-        catch(SQLException ex){
-            JOptionPane.showMessageDialog(this,"Database Error: " + ex.getMessage());
-        }
-        catch(Exception ex){
+        } catch(SQLException ex){
+            JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage());
+        } catch(Exception ex){
             JOptionPane.showMessageDialog(this, ex.getMessage());
         }
     }

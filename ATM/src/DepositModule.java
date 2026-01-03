@@ -47,29 +47,39 @@ public class DepositModule extends JFrame implements ActionListener {
             try {
                 int amount = Integer.parseInt(amountField.getText());
 
-                if(amount <= 0){
-                    JOptionPane.showMessageDialog(this,"Enter valid amount!");
-                    return;
-                }
+                if(amount <= 0)
+                    throw new Exception("Enter valid amount!");
 
                 Connection con = DriverManager.getConnection(
                         "jdbc:mysql://localhost:3306/atm","root","9309");
 
-                String sql = "UPDATE users SET balance = balance + ? WHERE id = ?";
-                PreparedStatement pst = con.prepareStatement(sql);
-                pst.setInt(1, amount);
-                pst.setInt(2, id);
-                pst.executeUpdate();
+                con.setAutoCommit(false);
+
+                String updateSql = "UPDATE users SET balance = balance + ? WHERE id=?";
+                PreparedStatement pst1 = con.prepareStatement(updateSql);
+                pst1.setInt(1, amount);
+                pst1.setInt(2, id);
+                pst1.executeUpdate();
+
+                String historySql = "INSERT INTO transactions(sender_id,receiver_id,amount) VALUES(NULL,?,?)";
+                PreparedStatement pst2 = con.prepareStatement(historySql);
+                pst2.setInt(1,id);
+                pst2.setInt(2,amount);
+                pst2.executeUpdate();
+
+                con.commit();
 
                 balance += amount;
-
                 JOptionPane.showMessageDialog(this,
                         "Deposit Successful!\nUpdated Balance: ₹" + balance);
 
                 con.close();
 
-            } catch(Exception ex){
-                JOptionPane.showMessageDialog(this,"Enter numeric value only!");
+            } catch(SQLException ex){
+                JOptionPane.showMessageDialog(this,"Database Error: " + ex.getMessage());
+            }
+            catch(Exception ex){
+                JOptionPane.showMessageDialog(this, ex.getMessage());
             }
         }
 

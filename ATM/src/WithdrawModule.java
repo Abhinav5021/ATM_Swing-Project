@@ -47,34 +47,50 @@ public class WithdrawModule extends JFrame implements ActionListener {
             try {
                 int amount = Integer.parseInt(amountField.getText());
 
-                if(amount <= 0){
-                    JOptionPane.showMessageDialog(this,"Enter valid amount!");
-                    return;
-                }
-
-                if(amount > balance){
-                    JOptionPane.showMessageDialog(this,"Insufficient Balance!");
-                    return;
-                }
+                if(amount <= 0)
+                    throw new Exception("Enter valid amount!");
 
                 Connection con = DriverManager.getConnection(
                         "jdbc:mysql://localhost:3306/atm","root","9309");
 
-                String sql = "UPDATE users SET balance = balance - ? WHERE id = ?";
-                PreparedStatement pst = con.prepareStatement(sql);
-                pst.setInt(1, amount);
-                pst.setInt(2, id);
-                pst.executeUpdate();
+                con.setAutoCommit(false);
 
-                balance -= amount;
+                String balSql = "SELECT balance FROM users WHERE id=?";
+                PreparedStatement pst1 = con.prepareStatement(balSql);
+                pst1.setInt(1,id);
+                ResultSet rs = pst1.executeQuery();
+
+                if(!rs.next()) throw new Exception("Account not found!");
+
+                int dbBalance = rs.getInt("balance");
+
+                if(dbBalance < amount)
+                    throw new Exception("Insufficient Balance!");
+
+                String updateSql = "UPDATE users SET balance = balance - ? WHERE id=?";
+                PreparedStatement pst2 = con.prepareStatement(updateSql);
+                pst2.setInt(1,amount);
+                pst2.setInt(2,id);
+                pst2.executeUpdate();
+
+                String historySql = "INSERT INTO transactions(sender_id,receiver_id,amount) VALUES(?,NULL,?)";
+                PreparedStatement pst3 = con.prepareStatement(historySql);
+                pst3.setInt(1,id);
+                pst3.setInt(2,amount);
+                pst3.executeUpdate();
+
+                con.commit();
 
                 JOptionPane.showMessageDialog(this,
-                        "Withdrawal Successful!\nRemaining Balance: ₹" + balance);
+                        "Withdrawal Successful!\nRemaining Balance: ₹" + (dbBalance - amount));
 
                 con.close();
 
-            } catch(Exception ex){
-                JOptionPane.showMessageDialog(this,"Enter numeric value only!");
+            } catch(SQLException ex){
+                JOptionPane.showMessageDialog(this,"Database Error: " + ex.getMessage());
+            }
+            catch(Exception ex){
+                JOptionPane.showMessageDialog(this, ex.getMessage());
             }
         }
 

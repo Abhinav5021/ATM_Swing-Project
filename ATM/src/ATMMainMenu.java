@@ -4,6 +4,7 @@ import java.awt.event.*;
 public class ATMMainMenu extends JFrame implements ActionListener {
 
     private JButton withdrawBtn, depositBtn, balanceBtn, pinChangeBtn, exitBtn;
+    private JButton transferBtn;
     private int id;
     private String name;
     private int balance;
@@ -26,13 +27,18 @@ public class ATMMainMenu extends JFrame implements ActionListener {
         withdrawBtn.addActionListener(this);
         add(withdrawBtn);
 
+        transferBtn = new JButton("Online Transfer");
+        transferBtn.setBounds(200, 100, 120, 30);
+        transferBtn.addActionListener(this);
+        add(transferBtn);
+
         depositBtn = new JButton("Deposit");
         depositBtn.setBounds(200, 50, 120, 30);
         depositBtn.addActionListener(this);
         add(depositBtn);
 
         balanceBtn = new JButton("Balance Inquiry");
-        balanceBtn.setBounds(50, 100, 270, 30);
+       balanceBtn.setBounds(50, 100, 120, 30);
         balanceBtn.addActionListener(this);
         add(balanceBtn);
 
@@ -70,5 +76,9 @@ public class ATMMainMenu extends JFrame implements ActionListener {
             JOptionPane.showMessageDialog(this, "Thank you for using ATM!");
             System.exit(0);
         }
+        else if(e.getSource() == transferBtn) {
+            new TransferModule(id);
+        }
+
     }
 }

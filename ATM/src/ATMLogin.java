@@ -43,47 +43,50 @@ public class ATMLogin extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        String card = cardField.getText();
-        String pin  = new String(pinField.getPassword());
-
-        if(card.isEmpty() || pin.isEmpty()){
-            JOptionPane.showMessageDialog(this, "Please enter Card Number and PIN");
-            return;
-        }
+        String card = cardField.getText().trim();
+        String pin  = new String(pinField.getPassword()).trim();
 
         try {
+            if(card.isEmpty() || pin.isEmpty())
+                throw new Exception("Please enter Card Number and PIN!");
+
+            if(!card.matches("\\d{10}"))
+                throw new Exception("Card Number must be exactly 10 digits!");
+
+            if(!pin.matches("\\d{4}"))
+                throw new Exception("PIN must be exactly 4 digits!");
+
             Connection con = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/atm",
-                    "root",
-                    "9309");
+                    "jdbc:mysql://localhost:3306/atm","root","9309");
 
-         //   String query = "SELECT name, balance FROM users WHERE card_number=? AND pin=?";
             String query = "SELECT id, name, balance FROM users WHERE card_number=? AND pin=?";
-
             PreparedStatement pst = con.prepareStatement(query);
             pst.setString(1, card);
             pst.setString(2, pin);
 
             ResultSet rs = pst.executeQuery();
 
-           if (rs.next()) {
-            int id = rs.getInt("id");
-            String name = rs.getString("name");
-            int balance = rs.getInt("balance");
+            if(rs.next()){
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                int balance = rs.getInt("balance");
 
-            JOptionPane.showMessageDialog(this, "Login Successful!");
-            new ATMMainMenu(id, name, balance);
-            dispose();
+                JOptionPane.showMessageDialog(this,"Login Successful!");
+                new ATMMainMenu(id, name, balance);
+                dispose();
             }
-
-            else {
-                JOptionPane.showMessageDialog(this, "Invalid Card Number or PIN");
+            else{
+                throw new Exception("Invalid Card Number or PIN!");
             }
 
             con.close();
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } 
+        catch(SQLException ex){
+            JOptionPane.showMessageDialog(this,"Database Error: " + ex.getMessage());
+        }
+        catch(Exception ex){
+            JOptionPane.showMessageDialog(this, ex.getMessage());
         }
     }
 
